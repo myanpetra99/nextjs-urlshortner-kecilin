@@ -54,3 +54,20 @@ body {
   border: 1px solid blue;
   flex: 1 1 auto;
 }
+
+/* Initial state, placed at the bottom and translated down by 100% (hidden) */
+.slide-up-div {
+  background-color: #ffa62a; /* Brighter color to indicate hope */
+  font-weight: bold;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  transform: translateY(100%);
+  transition: transform 0.5s ease-out; /* 0.5s slide duration */
+}
+
+/* When showDiv is true, the div will slide up */
+.show {
+  transform: translateY(0);
+}
