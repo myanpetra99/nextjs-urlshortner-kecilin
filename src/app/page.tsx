@@ -1,5 +1,5 @@
 'use client';
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import post from "./api/post";
 
 export default function Home() {
@@ -8,6 +8,13 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [shortenedURL, setShortenedURL] = useState('');
   const [tooltipVisible, setTooltipVisible] = useState(false);
+  const [array, setArray] = useState<kecilinType[]>([]);
+  
+  useEffect(() => {
+    const storedArray = getArrayFromLocalSrorage('kecilin');
+    console.log(storedArray);
+    setArray(storedArray);
+}, []); // Empty dependency array to run only once
 
   const copyToClipboard = async () => {
     try {
@@ -21,12 +28,60 @@ export default function Home() {
     }
   };
 
+  interface kecilinType {
+    id?: number;
+    url: string;
+    slug: string;
+}
+
+  
+  const setToArrayLocalStorage = (key: string, value: kecilinType) => {
+    if (typeof window !== 'undefined') {
+      const current = localStorage.getItem(key);
+      if (current) {
+        const array = JSON.parse(current);
+        value.id = array.length + 1;
+        array.push(value);
+        localStorage.setItem(key, JSON.stringify(array));
+        setArray(array);
+      } else {
+        value.id = 1;
+        const array = [value];
+        localStorage.setItem(key, JSON.stringify(array));
+        setArray(array);
+      }
+    }
+  };
+
+  const getArrayFromLocalSrorage = (key: string) => {
+    if (typeof window !== 'undefined') {
+      const current = localStorage.getItem(key);
+      if (current) {
+        const parsedArray = JSON.parse(current);
+        
+        // Sort the array by id in descending order
+        const sortedArray = parsedArray.sort((a: kecilinType, b: kecilinType) => b.id! - a.id!);
+        
+        return sortedArray;
+      }
+    }
+    return [];
+};
+
+
+        
+
+    
+
  const handleSubmit = async (e:any) => {
     e.preventDefault();
     setLoading(true);
     try {
       const response = await post({ url, slug });
       setShortenedURL(response.data);
+      setToArrayLocalStorage('kecilin', { url, slug });
+      setUrl('');
+      setSlug('');
     } catch (error) {
       console.error("Error shortening URL:", error);
       setShortenedURL('Error shortening the URL. Please try again.');
@@ -113,8 +168,29 @@ export default function Home() {
             URL has been copied!
           </div>
         )}
+                 
+
       </div>
+      
       </form>
+
+{array.length > 0 && (
+  <div className="flex flex-col items-center justify-center p-4 rounded-s">
+    <h2 className="text-2xl mb-4">History</h2>
+    <div className="flex flex-col items-center justify-center">
+      {array.map((item: kecilinType, index: number) => (
+        <div key={index} className="flex flex-col items-center justify-center w-full bg-slate-800 p-2 border-1 border-white mb-2">
+          <a className="hover:text-white text-gray-500" target="_blank" rel="noopener noreferrer" href={`http://kecilin.vercel.app/${item.slug}`}>
+            <p className="text-l">http://kecilin.vercel.app/{item.slug}</p>
+          </a>
+        </div>
+      ))}
+    </div>
+  </div>
+)}
+
+
+     
       
     </main>
   );
